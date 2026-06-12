@@ -35,6 +35,7 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import { dashboardApi } from '../api/modules'
+import { formatHours } from '../utils/date'
 
 const props = defineProps({
   refreshToken: {

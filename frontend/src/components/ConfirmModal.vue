@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { AlertTriangle, Loader2 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -67,15 +67,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['confirm', 'cancel'])
-
-watch(
-  () => props.visible,
-  (val) => {
-    if (val) {
-      emit('update:errorMessage', '')
-    }
-  }
-)
 
 const contentLines = computed(() =>
   props.content.split('\n').filter((line) => line.trim() !== '')
