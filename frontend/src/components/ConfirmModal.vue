@@ -6,10 +6,20 @@
         <div class="modal-content">
           <p v-for="(line, idx) in contentLines" :key="idx">{{ line }}</p>
         </div>
+        <div v-if="errorMessage" class="modal-error">
+          <AlertTriangle :size="16" />
+          <span>{{ errorMessage }}</span>
+        </div>
         <div class="modal-actions">
-          <button class="ghost" @click="handleCancel">{{ cancelText }}</button>
-          <button class="primary" :class="{ danger: variant === 'danger' }" @click="handleConfirm">
-            {{ confirmText }}
+          <button class="ghost" :disabled="loading" @click="handleCancel">{{ cancelText }}</button>
+          <button
+            class="primary"
+            :class="{ danger: variant === 'danger' }"
+            :disabled="loading"
+            @click="handleConfirm"
+          >
+            <Loader2 v-if="loading" :size="16" class="spin" />
+            {{ loading ? '处理中...' : confirmText }}
           </button>
         </div>
       </div>
@@ -18,7 +28,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
+import { AlertTriangle, Loader2 } from 'lucide-vue-next'
 
 const props = defineProps({
   visible: {
@@ -45,20 +56,41 @@ const props = defineProps({
     type: String,
     default: 'primary',
   },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  errorMessage: {
+    type: String,
+    default: '',
+  },
 })
 
 const emit = defineEmits(['confirm', 'cancel'])
+
+watch(
+  () => props.visible,
+  (val) => {
+    if (val) {
+      emit('update:errorMessage', '')
+    }
+  }
+)
 
 const contentLines = computed(() =>
   props.content.split('\n').filter((line) => line.trim() !== '')
 )
 
 function handleConfirm() {
-  emit('confirm')
+  if (!props.loading) {
+    emit('confirm')
+  }
 }
 
 function handleCancel() {
-  emit('cancel')
+  if (!props.loading) {
+    emit('cancel')
+  }
 }
 </script>
 
@@ -115,7 +147,7 @@ function handleCancel() {
 }
 
 .modal-content {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   color: #334e68;
   font-size: 14px;
   line-height: 1.6;
@@ -123,6 +155,20 @@ function handleCancel() {
 
 .modal-content p {
   margin: 4px 0;
+}
+
+.modal-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #b42318;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .modal-actions {
@@ -144,6 +190,11 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .primary {
   background: #0f766e;
   color: #fff;
@@ -156,5 +207,18 @@ button {
 .ghost {
   background: #edf2f7;
   color: #243b53;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

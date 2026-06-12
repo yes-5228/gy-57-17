@@ -15,7 +15,7 @@
       <MetricCard label="学员数" :value="summary.total_students ?? '-'" />
       <MetricCard label="教练数" :value="summary.total_coaches ?? '-'" />
       <MetricCard label="进行中预约" :value="summary.active_bookings ?? '-'" />
-      <MetricCard label="已完成课时" :value="summary.completed_hours ?? '-'" />
+      <MetricCard label="已完成课时" :value="formatHours(summary.completed_hours ?? 0)" />
     </div>
 
     <section class="panel">
@@ -43,6 +43,7 @@ import { onMounted, ref, watch } from 'vue'
 import { CalendarPlus } from 'lucide-vue-next'
 import MetricCard from '../components/MetricCard.vue'
 import { dashboardApi } from '../api/modules'
+import { formatHours } from '../utils/date'
 
 const props = defineProps({
   refreshToken: {

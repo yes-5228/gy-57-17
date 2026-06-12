@@ -20,5 +20,9 @@ export function addHours(date, hours) {
 
 export function formatHours(value) {
   const num = Number(value) || 0
-  return num.toFixed(2)
+  if (Number.isInteger(num)) {
+    return String(num)
+  }
+  const fixed = num.toFixed(2)
+  return fixed.replace(/\.?0+$/, '')
 }

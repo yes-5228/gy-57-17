@@ -94,6 +94,8 @@
       :content="confirmContent"
       :confirm-text="confirmText"
       :variant="confirmVariant"
+      :loading="confirmLoading"
+      :error-message="confirmError"
       @confirm="handleConfirm"
       @cancel="closeConfirm"
     />
@@ -141,6 +143,8 @@ const confirmTitle = ref('')
 const confirmContent = ref('')
 const confirmText = ref('确认')
 const confirmVariant = ref('primary')
+const confirmLoading = ref(false)
+const confirmError = ref('')
 let confirmAction = null
 
 const activeCoaches = computed(() => props.coaches.filter((coach) => coach.active))
@@ -172,8 +176,10 @@ async function checkIn(id) {
     message.value = '签到成功，课时已扣减'
     await load()
     emit('changed')
+    return true
   } catch (error) {
-    message.value = error.message
+    confirmError.value = error.message
+    return false
   }
 }
 
@@ -183,6 +189,7 @@ function openCheckInConfirm(item) {
   confirmContent.value = `学员：${item.student_name}\n教练：${item.coach_name}\n将扣减 ${duration} 课时`
   confirmText.value = '确认签到'
   confirmVariant.value = 'primary'
+  confirmError.value = ''
   confirmAction = () => checkIn(item.id)
   confirmVisible.value = true
 }
@@ -192,20 +199,31 @@ function openCancelConfirm(item) {
   confirmContent.value = `学员：${item.student_name}\n教练：${item.coach_name}\n确定要取消这条预约吗？`
   confirmText.value = '确认取消'
   confirmVariant.value = 'danger'
+  confirmError.value = ''
   confirmAction = () => cancel(item.id)
   confirmVisible.value = true
 }
 
 function closeConfirm() {
   confirmVisible.value = false
+  confirmLoading.value = false
+  confirmError.value = ''
   confirmAction = null
 }
 
 async function handleConfirm() {
-  if (confirmAction) {
-    const action = confirmAction
-    closeConfirm()
-    await action()
+  if (!confirmAction || confirmLoading.value) return
+  confirmLoading.value = true
+  confirmError.value = ''
+  try {
+    const success = await confirmAction()
+    if (success !== false) {
+      closeConfirm()
+    }
+  } finally {
+    if (confirmVisible.value) {
+      confirmLoading.value = false
+    }
   }
 }
 
@@ -216,8 +234,10 @@ async function cancel(id) {
     message.value = '预约已取消'
     await load()
     emit('changed')
+    return true
   } catch (error) {
-    message.value = error.message
+    confirmError.value = error.message
+    return false
   }
 }
 
