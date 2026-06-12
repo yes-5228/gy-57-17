@@ -83,6 +83,24 @@ def _as_naive(value: datetime) -> datetime:
     return value.astimezone().replace(tzinfo=None)
 
 
+def check_in_appointment(appointment_id: int) -> AppointmentRead:
+    appointment = appointments.get(appointment_id)
+    if not appointment:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Appointment not found")
+    if appointment.status != AppointmentStatus.booked:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only booked appointments can be checked in")
+
+    duration_hours = (appointment.end_time - appointment.start_time).total_seconds() / 3600
+    student = students[appointment.student_id]
+    if student.remaining_hours < duration_hours:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Student does not have enough remaining hours")
+
+    student.remaining_hours -= int(duration_hours)
+    appointment.status = AppointmentStatus.completed
+    appointments[appointment.id] = appointment
+    return appointment_to_read(appointment)
+
+
 def cancel_appointment(appointment_id: int, reason: str) -> AppointmentRead:
     appointment = appointments.get(appointment_id)
     if not appointment:

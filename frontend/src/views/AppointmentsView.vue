@@ -63,14 +63,24 @@
               <td>{{ item.coach_name }}</td>
               <td><StatusBadge :status="item.status" /></td>
               <td>
-                <button
-                  class="ghost danger"
-                  :disabled="item.status !== 'booked'"
-                  @click="cancel(item.id)"
-                >
-                  <XCircle :size="16" />
-                  取消
-                </button>
+                <div style="display:flex;gap:6px;">
+                  <button
+                    class="ghost"
+                    :disabled="item.status !== 'booked'"
+                    @click="checkIn(item.id)"
+                  >
+                    <CheckCircle :size="16" />
+                    签到
+                  </button>
+                  <button
+                    class="ghost danger"
+                    :disabled="item.status !== 'booked'"
+                    @click="cancel(item.id)"
+                  >
+                    <XCircle :size="16" />
+                    取消
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -82,7 +92,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { CalendarCheck, XCircle } from 'lucide-vue-next'
+import { CalendarCheck, CheckCircle, XCircle } from 'lucide-vue-next'
 import EmptyState from '../components/EmptyState.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import { appointmentApi } from '../api/modules'
@@ -130,6 +140,18 @@ async function submit() {
       end_time: new Date(form.end_time).toISOString(),
     })
     message.value = '预约已创建'
+    await load()
+    emit('changed')
+  } catch (error) {
+    message.value = error.message
+  }
+}
+
+async function checkIn(id) {
+  message.value = ''
+  try {
+    await appointmentApi.checkIn(id)
+    message.value = '签到成功，课时已扣减'
     await load()
     emit('changed')
   } catch (error) {

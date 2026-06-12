@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.models import AppointmentStatus
 from app.schemas import AppointmentCancel, AppointmentCreate, AppointmentRead
-from app.services.appointments import cancel_appointment, create_appointment, list_appointments
+from app.services.appointments import cancel_appointment, check_in_appointment, create_appointment, list_appointments
 
 router = APIRouter()
 
@@ -20,3 +20,8 @@ def book_appointment(payload: AppointmentCreate) -> AppointmentRead:
 @router.post("/{appointment_id}/cancel", response_model=AppointmentRead)
 def cancel(appointment_id: int, payload: AppointmentCancel) -> AppointmentRead:
     return cancel_appointment(appointment_id, payload.reason)
+
+
+@router.post("/{appointment_id}/check-in", response_model=AppointmentRead)
+def check_in(appointment_id: int) -> AppointmentRead:
+    return check_in_appointment(appointment_id)
