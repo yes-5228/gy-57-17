@@ -90,12 +90,16 @@ def check_in_appointment(appointment_id: int) -> AppointmentRead:
     if appointment.status != AppointmentStatus.booked:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only booked appointments can be checked in")
 
-    duration_hours = (appointment.end_time - appointment.start_time).total_seconds() / 3600
+    now = datetime.now()
+    if now < appointment.start_time:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "还未到上课时间，不能签到")
+
+    duration_hours = round((appointment.end_time - appointment.start_time).total_seconds() / 3600, 1)
     student = students[appointment.student_id]
     if student.remaining_hours < duration_hours:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Student does not have enough remaining hours")
 
-    student.remaining_hours -= int(duration_hours)
+    student.remaining_hours = round(student.remaining_hours - duration_hours, 1)
     appointment.status = AppointmentStatus.completed
     appointments[appointment.id] = appointment
     return appointment_to_read(appointment)

@@ -148,6 +148,14 @@ async function submit() {
 }
 
 async function checkIn(id) {
+  const item = appointments.value.find((a) => a.id === id)
+  if (!item) return
+  const duration = ((new Date(item.end_time) - new Date(item.start_time)) / 3600000).toFixed(1)
+  const confirmed = window.confirm(
+    `确认签到？\n学员：${item.student_name}\n教练：${item.coach_name}\n将扣减 ${duration} 课时`
+  )
+  if (!confirmed) return
+
   message.value = ''
   try {
     await appointmentApi.checkIn(id)
