@@ -33,7 +33,7 @@
             <tr v-for="student in students" :key="student.id">
               <td>{{ student.name }}</td>
               <td>{{ student.phone }}</td>
-              <td>{{ student.remaining_hours }}h</td>
+              <td>{{ formatHours(student.remaining_hours) }}h</td>
             </tr>
           </tbody>
         </table>
@@ -46,6 +46,7 @@
 import { reactive } from 'vue'
 import { UserPlus } from 'lucide-vue-next'
 import { studentApi } from '../api/modules'
+import { formatHours } from '../utils/date'
 
 defineProps({
   students: {

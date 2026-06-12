@@ -17,3 +17,8 @@ export function formatDateTime(value) {
 export function addHours(date, hours) {
   return new Date(date.getTime() + hours * 60 * 60 * 1000)
 }
+
+export function formatHours(value) {
+  const num = Number(value) || 0
+  return num.toFixed(2)
+}

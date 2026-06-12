@@ -15,7 +15,7 @@
           <select v-model.number="form.student_id" required>
             <option value="" disabled>选择学员</option>
             <option v-for="student in students" :key="student.id" :value="student.id">
-              {{ student.name }}（剩余 {{ student.remaining_hours }}h）
+              {{ student.name }}（剩余 {{ formatHours(student.remaining_hours) }}h）
             </option>
           </select>
         </label>
@@ -67,7 +67,7 @@
                   <button
                     class="ghost"
                     :disabled="item.status !== 'booked'"
-                    @click="checkIn(item.id)"
+                    @click="openCheckInConfirm(item)"
                   >
                     <CheckCircle :size="16" />
                     签到
@@ -75,7 +75,7 @@
                   <button
                     class="ghost danger"
                     :disabled="item.status !== 'booked'"
-                    @click="cancel(item.id)"
+                    @click="openCancelConfirm(item)"
                   >
                     <XCircle :size="16" />
                     取消
@@ -87,6 +87,16 @@
         </table>
       </section>
     </div>
+
+    <ConfirmModal
+      :visible="confirmVisible"
+      :title="confirmTitle"
+      :content="confirmContent"
+      :confirm-text="confirmText"
+      :variant="confirmVariant"
+      @confirm="handleConfirm"
+      @cancel="closeConfirm"
+    />
   </section>
 </template>
 
@@ -95,8 +105,9 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { CalendarCheck, CheckCircle, XCircle } from 'lucide-vue-next'
 import EmptyState from '../components/EmptyState.vue'
 import StatusBadge from '../components/StatusBadge.vue'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { appointmentApi } from '../api/modules'
-import { addHours, formatDateTime, toLocalInputValue } from '../utils/date'
+import { addHours, formatDateTime, formatHours, toLocalInputValue } from '../utils/date'
 
 const props = defineProps({
   students: {
@@ -125,6 +136,13 @@ const form = reactive({
   end_time: toLocalInputValue(addHours(initialStart, 2)),
 })
 
+const confirmVisible = ref(false)
+const confirmTitle = ref('')
+const confirmContent = ref('')
+const confirmText = ref('确认')
+const confirmVariant = ref('primary')
+let confirmAction = null
+
 const activeCoaches = computed(() => props.coaches.filter((coach) => coach.active))
 
 async function load() {
@@ -148,14 +166,6 @@ async function submit() {
 }
 
 async function checkIn(id) {
-  const item = appointments.value.find((a) => a.id === id)
-  if (!item) return
-  const duration = ((new Date(item.end_time) - new Date(item.start_time)) / 3600000).toFixed(1)
-  const confirmed = window.confirm(
-    `确认签到？\n学员：${item.student_name}\n教练：${item.coach_name}\n将扣减 ${duration} 课时`
-  )
-  if (!confirmed) return
-
   message.value = ''
   try {
     await appointmentApi.checkIn(id)
@@ -164,6 +174,38 @@ async function checkIn(id) {
     emit('changed')
   } catch (error) {
     message.value = error.message
+  }
+}
+
+function openCheckInConfirm(item) {
+  const duration = formatHours((new Date(item.end_time) - new Date(item.start_time)) / 3600000)
+  confirmTitle.value = '确认签到'
+  confirmContent.value = `学员：${item.student_name}\n教练：${item.coach_name}\n将扣减 ${duration} 课时`
+  confirmText.value = '确认签到'
+  confirmVariant.value = 'primary'
+  confirmAction = () => checkIn(item.id)
+  confirmVisible.value = true
+}
+
+function openCancelConfirm(item) {
+  confirmTitle.value = '确认取消'
+  confirmContent.value = `学员：${item.student_name}\n教练：${item.coach_name}\n确定要取消这条预约吗？`
+  confirmText.value = '确认取消'
+  confirmVariant.value = 'danger'
+  confirmAction = () => cancel(item.id)
+  confirmVisible.value = true
+}
+
+function closeConfirm() {
+  confirmVisible.value = false
+  confirmAction = null
+}
+
+async function handleConfirm() {
+  if (confirmAction) {
+    const action = confirmAction
+    closeConfirm()
+    await action()
   }
 }
 

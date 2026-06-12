@@ -4,7 +4,7 @@ from app.store import appointments, students
 
 
 def _hours(start, end) -> float:
-    return round((end - start).total_seconds() / 3600, 1)
+    return round((end - start).total_seconds() / 3600, 2)
 
 
 def lesson_stats() -> list[LessonStats]:
@@ -26,8 +26,8 @@ def lesson_stats() -> list[LessonStats]:
             LessonStats(
                 student_id=student.id,
                 student_name=student.name,
-                completed_hours=round(completed_hours, 1),
-                booked_hours=round(booked_hours, 1),
+                completed_hours=round(completed_hours, 2),
+                booked_hours=round(booked_hours, 2),
                 cancelled_count=cancelled_count,
                 remaining_hours=student.remaining_hours,
             )

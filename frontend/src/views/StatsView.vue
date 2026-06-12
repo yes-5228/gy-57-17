@@ -21,10 +21,10 @@
         <tbody>
           <tr v-for="item in stats" :key="item.student_id">
             <td>{{ item.student_name }}</td>
-            <td>{{ item.completed_hours }}h</td>
-            <td>{{ item.booked_hours }}h</td>
+            <td>{{ formatHours(item.completed_hours) }}h</td>
+            <td>{{ formatHours(item.booked_hours) }}h</td>
             <td>{{ item.cancelled_count }}</td>
-            <td>{{ item.remaining_hours }}h</td>
+            <td>{{ formatHours(item.remaining_hours) }}h</td>
           </tr>
         </tbody>
       </table>
